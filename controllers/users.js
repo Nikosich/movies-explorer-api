@@ -30,23 +30,36 @@ const login = (req, res, next) => {
 
 const createUser = (req, res, next) => {
   const { name, email, password } = req.body;
-  bcrypt.hash(password, 10)
+
+  if (!email || !password || !name) {
+    next(new ReqError('Некоректные данные.'));
+  }
+
+  return User.findOne({ email }).then((user) => {
+    if (user) {
+      next(new ConflictError('Этот email уже зарегестрирован'));
+    }
+
+    return bcrypt.hash(password, 10);
+  })
     .then((hash) => User.create({
-      name, email, password: hash,
+      email,
+      password: hash,
+      name: req.body.name,
     }))
     .then((user) => res.status(201).send({
-      _id: user._id,
       name: user.name,
+      _id: user._id,
       email: user.email,
     }))
     .catch((err) => {
-      if (err.code === 11000) {
-        next(new ConflictError('Пользователь с таким email уже существует'));
-      } else if (err.message === 'ValidationError') {
-        next(new ReqError('Некорректные данные'));
-      } else {
-        next(err);
+      if (err.name === 'ValidationError') {
+        return next(new ReqError('Некоректные данные.'));
       }
+      if (err.code === 11000) {
+        return next(new ConflictError('Пользователь с таким email уже существует'));
+      }
+      return next(err);
     });
 };
 
