@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 const helmet = require('helmet');
 const bodyParser = require('body-parser');
 const { errors } = require('celebrate');
-const cors = require('cors');
+const cors = require('./middlewares/Cors');
 const errorHandler = require('./middlewares/errorHandler');
 const { requestLogger, errorLogger } = require('./middlewares/logger');
 
@@ -27,7 +27,7 @@ app.use(helmet());
 
 app.use(bodyParser.json());
 
-app.use(cors());
+app.use(cors);
 
 app.use(requestLogger);
 
