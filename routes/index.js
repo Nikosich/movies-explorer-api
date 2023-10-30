@@ -41,9 +41,9 @@ router.post('/signup', validateSignup, createUser);
 
 router.post('/signin', validateSignin, login);
 
-router.use(userRouter);
+router.use(auth, userRouter);
 
-router.use(movieRouter);
+router.use(auth, movieRouter);
 
 router.use('*', auth, (req, res, next) => {
   next(new NotFoundError('Такой страницы не существует.'));
