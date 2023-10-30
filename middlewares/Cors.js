@@ -7,7 +7,7 @@ const allowedCors = [
     'https://api.mesto.nksch.nomoredom.nomoredomains.rocks',
     'http://mesto.nksch.nomoredomains.rocks',
     'https://mesto.nksch.nomoredomains.rocks',
-    'http://51.250.72.163:3000',
+    'http://51.250.81.108:3000',
   ];
   
   module.exports = (req, res, next) => {
