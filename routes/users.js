@@ -9,7 +9,7 @@ const {
   validateUserUp,
 } = require('../middlewares/validate');
 
-userRouter.get('/users', getUsers);
+userRouter.get('/users/me', getUsers);
 
 userRouter.patch('/users/me', validateUserUp, updateUser);
 
