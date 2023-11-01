@@ -51,29 +51,23 @@ const createMovie = (req, res, next) => {
     });
 };
 
-const deleteMovie = (req, res, next) => {
-  const { movieId } = req.params;
-  const { _id } = req.user;
-  Movie.findById(movieId)
-    /* eslint-disable consistent-return */
+module.exports.deleteMovieById = (req, res, next) => {
+  Movie.findById({ _id: req.params.movieId })
+    .populate(['owner'])
     .then((movie) => {
       if (!movie) {
-        return next(new NotFoundError("Такого фильма нет."));
+        throw new NotFoundError('Фильм не найден');
+      } else if (!(req.user._id === movie.owner._id.toString())) {
+        throw new ForbiddenError('Чужой филь удалить нельзя');
+      } else {
+        movie.deleteOne()
+          .then((myMovie) => {
+            res.status(200).send({ myMovie });
+          })
+          .catch(next);
       }
-      if (movie.owner.valueOf() !== _id) {
-        return next(new ForbiddenError("Чужой фильм удалять нельзя"));
-      }
-      Movie.findByIdAndRemove(movieId)
-        .then((deletedMovie) => res.status(200).send(deletedMovie))
-        .catch(next);
     })
-    .catch((err) => {
-      if (err.name === "CastError") {
-        return next(new ReqError("Некоректные данные."));
-      }
-
-      return next(err);
-    });
+    .catch(next);
 };
 
 module.exports = { getMovies, createMovie, deleteMovie };
