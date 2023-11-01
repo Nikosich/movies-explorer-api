@@ -6,6 +6,19 @@ const ConflictError = require('../errors/ConflictError');
 const ReqError = require('../errors/ReqError');
 const AuthorizationError = require('../errors/AuthorizationError');
 
+
+const getUser = (req, res, next) => {
+  const { _id } = req.user;
+  User.findById(_id)
+    .then((user) => {
+      if (!user) {
+        throw new NotFoundError('Пользователь c указанным _id не найден');
+      }
+      res.status(200).send({ user });
+    })
+    .catch(next);
+};
+
 const login = (req, res, next) => {
   const { email, password } = req.body;
 
@@ -79,14 +92,8 @@ const updateUser = (req, res, next) => {
     });
 };
 
-const getUsers = (req, res) => {
-  User.find({})
-    .then((users) => res.status(200).send(users))
-    .catch(() => res.status(500).send({ message: 'Ошибка сервера' }));
-};
-
 module.exports = {
-  getUsers,
+  getUser,
   createUser,
   updateUser,
   login,
