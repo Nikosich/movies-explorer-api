@@ -20,10 +20,10 @@ const createMovie = (req, res, next) => {
     description,
     image,
     trailerLink,
-    thumbnail,
-    movieId,
     nameRU,
     nameEN,
+    thumbnail,
+    movieId,
   } = req.body;
   Movie.create({
     country,
