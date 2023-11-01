@@ -52,22 +52,24 @@ const createMovie = (req, res, next) => {
 };
 
 const deleteMovie = (req, res, next) => {
-  Movie.findById({ _id: req.params.movieId })
-    .populate(['owner'])
+  const movieId = req.params._id;
+
+  Movie.findById({ _id: movieId })
+    .orFail(new NotFoundError("Не найдено"))
     .then((movie) => {
-      if (!movie) {
-        throw new NotFoundError('Фильм не найден');
-      } else if (!(req.user._id === movie.owner._id.toString())) {
-        throw new ForbiddenError('Чужой филь удалить нельзя');
-      } else {
-        movie.deleteOne()
-          .then((myMovie) => {
-            res.status(200).send({ myMovie });
-          })
-          .catch(next);
+      if (movie.owner.toString() !== req.user._id) {
+        throw new ForbiddenError("Чужой фильм удалить нельзя");
       }
+      return Movie.findByIdAndRemove({ _id: movieId })
+        .then((deletedMovie) => res.status(200).send(deletedMovie))
+        .catch(next);
     })
-    .catch(next);
+    .catch((error) => {
+      if (error instanceof mongoose.Error.CastError) {
+        next(new ValidationError("Неверные данные"));
+      }
+      next(error);
+    });
 };
 
 module.exports = { getMovies, createMovie, deleteMovie };
