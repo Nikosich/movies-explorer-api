@@ -25,6 +25,8 @@ const createMovie = (req, res, next) => {
     thumbnail,
     movieId,
   } = req.body;
+  const owner = req.user._id;
+  console.log(owner);
   Movie.create({
     country,
     director,
@@ -37,19 +39,15 @@ const createMovie = (req, res, next) => {
     nameEN,
     thumbnail,
     movieId,
-    owner: req.user._id,
+    owner,
   })
-    .then((movie) => {
-      movie
-        .populate("owner")
-        .then(() => res.status(201).send(movie))
-        .catch(next);
-    })
+    .then((movie) => res.send(movie))
     .catch((err) => {
-      if (err.name === "ValidationError") {
-        return next(new ReqError("Некоректные данные."));
+      if (err.name === 'ValidationError') {
+        next(new ReqError('Данные не верны.'));
+      } else {
+        next(err);
       }
-      return next(err);
     });
 };
 
