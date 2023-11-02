@@ -77,38 +77,31 @@ const createUser = (req, res, next) => {
     });
 };
 
-const updateUser = async (req, res, next) => {
+const updateUser = (req, res, next) => {
   const { name, email } = req.body;
-
-  try {
-    const emailRegistered = await isEmailRegistered(email);
-    if (emailRegistered) {
-      throw new ConflictError('Пользователь с таким email уже существует');
-    }
-
-    
-    const user = await User.findByIdAndUpdate(
-      req.user._id,
-      { name, email },
-      {
-        new: true,
-        runValidators: true,
-      },
-    );
-
-    if (!user) {
-      throw new NotFoundError('Пользователь с указанным _id не найден');
-    }
-
-    res.send({ user });
-  } catch (err) {
-    if (err instanceof mongoose.Error.ValidationError) {
-      const message = Object.values(err.errors).map((error) => error.message).join('; ');
-      next(new ReqError(message));
-    } else {
-      next(err);
-    }
-  }
+  User.findByIdAndUpdate(
+    req.user._id,
+    { name, email },
+    {
+      new: true,
+      runValidators: true,
+    },
+  )
+    .then((user) => {
+      if (!user) {
+        throw new NotFoundError('Не найден пользователь');
+      }
+      res.status(200).send(user);
+    })
+    .catch((error) => {
+      if (error instanceof mongoose.Error.ValidationError) {
+        next(new ReqError('Некоректные данные.'));
+      }
+      if (error.code === 11000) {
+        next(new ConflictError('Пользователь с таким email уже существует'));
+      }
+      next(error);
+    });
 };
 
 module.exports = {
