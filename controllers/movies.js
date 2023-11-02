@@ -5,10 +5,10 @@ const ForbiddenError = require("../errors/ForbiddenError");
 
 const getMovies = (req, res, next) => {
   const owner = req.user._id;
-  Movie.find({})
-    .populate([owner])
-    .then((movies) => res.status(200).send(movies.reverse()))
-    .catch(() => res.status(500).send({ message: "Ошибка сервера" }))
+  Movie.find({ owner })
+    .then((movies) => {
+      if (movies) res.status(200).send(movies);
+    })
     .catch(next);
 };
 
