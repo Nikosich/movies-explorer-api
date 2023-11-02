@@ -2,10 +2,11 @@ const { NODE_ENV, JWT_SECRET } = process.env;
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
+require('dotenv').config();
 const ConflictError = require('../errors/ConflictError');
 const ReqError = require('../errors/ReqError');
 const AuthorizationError = require('../errors/AuthorizationError');
-
+const NotFoundError = require('../errors/NotFoundError');
 
 const getUser = (req, res, next) => {
   const { _id } = req.user;
@@ -76,20 +77,38 @@ const createUser = (req, res, next) => {
     });
 };
 
-const updateUser = (req, res, next) => {
+const updateUser = async (req, res, next) => {
   const { name, email } = req.body;
-  User.findByIdAndUpdate(
-    req.user._id,
-    { name, email },
-    { new: true, runValidators: true },
-  )
-    .then((user) => res.status(200).send(user))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        return next(new ReqError('Некоректные данные.'));
-      }
-      return next(err);
-    });
+
+  try {
+    const emailRegistered = await isEmailRegistered(email);
+    if (emailRegistered) {
+      throw new ConflictError('Пользователь с таким email уже существует');
+    }
+
+    
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { name, email },
+      {
+        new: true,
+        runValidators: true,
+      },
+    );
+
+    if (!user) {
+      throw new NotFoundError('Пользователь с указанным _id не найден');
+    }
+
+    res.send({ user });
+  } catch (err) {
+    if (err instanceof mongoose.Error.ValidationError) {
+      const message = Object.values(err.errors).map((error) => error.message).join('; ');
+      next(new ReqError(message));
+    } else {
+      next(err);
+    }
+  }
 };
 
 module.exports = {
