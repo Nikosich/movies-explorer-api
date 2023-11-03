@@ -1,5 +1,6 @@
 const { NODE_ENV, JWT_SECRET } = process.env;
 const bcrypt = require('bcryptjs');
+const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 require('dotenv').config();
@@ -75,6 +76,15 @@ const createUser = (req, res, next) => {
       }
       return next(err);
     });
+};
+
+const isEmailRegistered = async (email) => {
+  try {
+    const user = await User.findOne({ email });
+    return !!user; 
+  } catch (err) {
+    throw err;
+  }
 };
 
 const updateUser = async (req, res, next) => {
