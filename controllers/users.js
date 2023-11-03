@@ -1,4 +1,5 @@
 const { NODE_ENV, JWT_SECRET } = process.env;
+const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
